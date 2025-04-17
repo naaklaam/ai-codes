@@ -1,0 +1,76 @@
+#!/bin/bash
+
+# Secure Stegano v2.0 - Gabung E2EE + Steganografi
+RED='\033[1;31m'
+GREEN='\033[1;32m'
+CYAN='\033[1;36m'
+NC='\033[0m'
+
+# Cek dependensi
+check_deps() {
+    if ! command -v gpg &> /dev/null; then
+        pkg install gnupg -y || { echo -e "${RED}[!] Gagal install GPG!${NC}"; exit 1; }
+    fi
+    if ! command -v steghide &> /dev/null; then
+        pkg install steghide -y || { echo -e "${RED}[!] Gagal install steghide!${NC}"; exit 1; }
+    fi
+}
+
+# Generate GPG Key (Jika belum ada)
+setup_gpg() {
+    if ! gpg --list-secret-keys &> /dev/null; then
+        echo -e "${CYAN}[+] Buat key GPG baru (Simpan passphrase-nya!)${NC}"
+        gpg --full-generate-key
+    fi
+}
+
+# Enkripsi + Sembunyikan
+secure_hide() {
+    read -p "Masukkan pesan rahasia: " msg
+    read -p "Path gambar (.jpg/.png): " image
+    read -p "Public Key penerima (email): " recipient
+    
+    echo "$msg" > secret.txt
+    echo -e "${CYAN}[+] Enkripsi dengan GPG...${NC}"
+    gpg --encrypt --armor --recipient "$recipient" secret.txt || { echo -e "${RED}[!] Gagal enkripsi!${NC}"; return; }
+    
+    echo -e "${CYAN}[+] Sembunyikan dalam gambar...${NC}"
+    steghide embed -cf "$image" -ef secret.txt.asc -p "stego_pass" && {
+        echo -e "${GREEN}[√] Berhasil! File aman: ${image}${NC}"
+        rm secret.txt secret.txt.asc
+    } || echo -e "${RED}[!] Gagal menyembunyikan!${NC}"
+}
+
+# Ekstrak + Dekripsi
+secure_reveal() {
+    read -p "Path gambar berisi pesan: " image
+    read -p "Private Key passphrase: " pass
+    
+    echo -e "${CYAN}[+] Ekstrak dari gambar...${NC}"
+    steghide extract -sf "$image" -p "stego_pass" -xf encrypted.asc || { echo -e "${RED}[!] Password stego salah!${NC}"; return; }
+    
+    echo -e "${CYAN}[+] Dekripsi dengan GPG...${NC}"
+    echo "$pass" | gpg --batch --passphrase-fd 0 --decrypt encrypted.asc 2>/dev/null && {
+        rm encrypted.asc
+    } || echo -e "${RED}[!] Password GPG salah!${NC}"
+}
+
+# Main Menu
+main() {
+    echo -e "\n${CYAN}>>> Secure Stegano (E2EE + Steganografi) <<<${NC}"
+    echo -e "${GREEN}[1] Enkripsi + Sembunyikan Pesan"
+    echo -e "[2] Ekstrak + Dekripsi Pesan"
+    echo -e "[3] Keluar${NC}"
+    read -p "Pilih: " opt
+
+    case $opt in
+        1) secure_hide ;;
+        2) secure_reveal ;;
+        3) exit ;;
+        *) echo -e "${RED}[!] Pilihan salah!${NC}"; sleep 1 ;;
+    esac
+}
+
+check_deps
+setup_gpg
+while true; do main; done
